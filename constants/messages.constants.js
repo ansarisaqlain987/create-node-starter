@@ -11,5 +11,5 @@ exports.message = {
   missingFields: 'Request has missing required fields',
   noUpdateFields: 'Nothing to update.',
   noUniqueId: 'Please provide record id.',
-  unauthorized: 'Unauthorized to perform this action.',
-};
+  unauthorized: 'Unauthorized to perform this action.'
+}

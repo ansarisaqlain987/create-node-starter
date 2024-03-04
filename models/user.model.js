@@ -1,6 +1,6 @@
-const { UserTypes } = require('../constants');
-const { BaseSchema, extend } = require('./base.model');
-const mongoose = require('mongoose');
+const { UserTypes } = require('../constants')
+const { BaseSchema, extend } = require('./base.model')
+const mongoose = require('mongoose')
 const userSchema = extend(BaseSchema, {
   fullName: { type: String, required: true },
   dateOfBirth: { type: String, required: false },
@@ -11,7 +11,7 @@ const userSchema = extend(BaseSchema, {
   userType: {
     type: String,
     enum: Object.values(UserTypes),
-    default: UserTypes.user,
-  },
-});
-exports.UserSchema = mongoose.model('users', userSchema);
+    default: UserTypes.user
+  }
+})
+exports.UserSchema = mongoose.model('users', userSchema)
