@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
-const { RecordStatus } = require('../constants');
+const mongoose = require('mongoose')
+const { RecordStatus } = require('../constants')
 
 exports.BaseSchema = new mongoose.Schema({
   createdBy: { type: String, required: true },
@@ -9,10 +9,10 @@ exports.BaseSchema = new mongoose.Schema({
   recStatus: {
     type: String,
     enum: RecordStatus.getAllStatus(),
-    default: RecordStatus.active,
-  },
-});
+    default: RecordStatus.active
+  }
+})
 
 // Extend function
 exports.extend = (Schema, obj) =>
-  new mongoose.Schema(Object.assign({}, Schema.obj, obj));
+  new mongoose.Schema(Object.assign({}, Schema.obj, obj))

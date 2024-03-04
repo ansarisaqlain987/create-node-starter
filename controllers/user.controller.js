@@ -1,19 +1,19 @@
-const userdb = require('../database/user.db');
-const { status } = require('../constants');
-const { message } = require('../constants/messages.constants');
-const { responseStructure: rs } = require('../helpers/response.helper');
-const { updateFilters, FiltersMeta } = require('../helpers/filter.helpers');
-const { getSelectString, SelectMeta } = require('../helpers/dbselect.helper');
-const { getCleanObject, getPayload } = require('../helpers/index.helper');
+const userdb = require('../database/user.db')
+const { status } = require('../constants')
+const { message } = require('../constants/messages.constants')
+const { responseStructure: rs } = require('../helpers/response.helper')
+const { updateFilters, FiltersMeta } = require('../helpers/filter.helpers')
+const { getSelectString, SelectMeta } = require('../helpers/dbselect.helper')
+const { getCleanObject, getPayload } = require('../helpers/index.helper')
 // eslint-disable-next-line camelcase
-const { jwt_key } = require('../config/env.config');
-const jwt = require('jsonwebtoken');
+const { jwt_key } = require('../config/env.config')
+const jwt = require('jsonwebtoken')
 const {
   isRequestBodyForAddRecordValid,
   isRequestBodyForUpdateRecordValid,
-  getObjectWithValidFields,
-} = require('../helpers/validation.helper');
-const { UserSchema } = require('../models/user.model');
+  getObjectWithValidFields
+} = require('../helpers/validation.helper')
+const { UserSchema } = require('../models/user.model')
 
 /**
  * @swagger
@@ -146,31 +146,31 @@ const { UserSchema } = require('../models/user.model');
 
 // Add user
 exports.addUser = async (req, res) => {
-  const jsonData = req.body;
+  const jsonData = req.body
 
   const { isValid, missingFields, validFields } =
-    isRequestBodyForAddRecordValid(jsonData, UserSchema.schema);
+    isRequestBodyForAddRecordValid(jsonData, UserSchema.schema)
   if (!isValid) {
     return res
       .status(status.badRequest)
-      .send(rs(status.badRequest, message.missingFields, { missingFields }));
+      .send(rs(status.badRequest, message.missingFields, { missingFields }))
   }
 
-  const validObject = getObjectWithValidFields(jsonData, validFields);
+  const validObject = getObjectWithValidFields(jsonData, validFields)
 
   userdb
     .addUser(validObject, jsonData.email)
     .then((response) => {
       res
         .status(status.success)
-        .send(rs(status.success, message.addUserSuccess));
+        .send(rs(status.success, message.addUserSuccess))
     })
     .catch((error) => {
       res
         .status(status.failure)
-        .send(rs(status.failure, message.addUserError, error));
-    });
-};
+        .send(rs(status.failure, message.addUserError, error))
+    })
+}
 
 /**
  * @swagger
@@ -215,22 +215,22 @@ exports.addUser = async (req, res) => {
 
 // get all users
 exports.getUsers = (req, res) => {
-  const queryParams = req.query;
-  updateFilters(queryParams, FiltersMeta.users);
-  const selectString = getSelectString(SelectMeta.default, SelectMeta.users);
+  const queryParams = req.query
+  updateFilters(queryParams, FiltersMeta.users)
+  const selectString = getSelectString(SelectMeta.default, SelectMeta.users)
   userdb
     .getUsers(queryParams, { select: selectString })
     .then((users) => {
       res
         .status(status.success)
-        .send(rs(status.success, message.getAllStudents, users));
+        .send(rs(status.success, message.getAllStudents, users))
     })
     .catch((error) => {
       res
         .status(status.failure)
-        .send(rs(status.failure, message.internalServerError, error));
-    });
-};
+        .send(rs(status.failure, message.internalServerError, error))
+    })
+}
 
 /**
  * @swagger
@@ -273,35 +273,35 @@ exports.getUsers = (req, res) => {
 
 // Get single user data
 exports.singleUser = (req, res) => {
-  const userId = req.params.id;
+  const userId = req.params.id
 
   if (!userId) {
     return res
       .status(status.badRequest)
-      .send(rs(status.badRequest, message.noUniqueId));
+      .send(rs(status.badRequest, message.noUniqueId))
   }
 
-  const selectString = getSelectString(SelectMeta.default, SelectMeta.users);
+  const selectString = getSelectString(SelectMeta.default, SelectMeta.users)
   userdb
     .getUsers({ _id: userId }, { select: selectString })
     .then((users) => {
       if (users.length > 0) {
-        console.log(users);
+        console.log(users)
         res
           .status(status.success)
-          .send(rs(status.success, message.singleStudent, users[0]));
+          .send(rs(status.success, message.singleStudent, users[0]))
       } else {
         res
           .status(status.success)
-          .send(rs(status.noRecords, message.noRecords));
+          .send(rs(status.noRecords, message.noRecords))
       }
     })
     .catch((error) => {
       res
         .status(status.failure)
-        .send(rs(status.failure, message.internalServerError, error));
-    });
-};
+        .send(rs(status.failure, message.internalServerError, error))
+    })
+}
 
 /**
  * @swagger
@@ -344,25 +344,25 @@ exports.singleUser = (req, res) => {
 
 // delete user
 exports.deleteUser = (req, res) => {
-  const userId = req.params.id;
+  const userId = req.params.id
   if (!userId) {
     return res
       .status(status.badRequest)
-      .send(rs(status.badRequest, message.noUniqueId));
+      .send(rs(status.badRequest, message.noUniqueId))
   }
   userdb
     .deleteUser(userId)
     .then((response) => {
       res
         .status(status.success)
-        .send(rs(status.success, message.deleteUser, response));
+        .send(rs(status.success, message.deleteUser, response))
     })
     .catch((error) => {
       res
         .status(status.failure)
-        .send(rs(status.failure, message.internalServerError, error));
-    });
-};
+        .send(rs(status.failure, message.internalServerError, error))
+    })
+}
 
 /**
  * @swagger
@@ -413,33 +413,33 @@ exports.deleteUser = (req, res) => {
 
 // update user
 exports.updateUser = async (req, res) => {
-  const decoded = getPayload(req);
-  const jsonData = req.body;
-  const userId = jsonData._id;
+  const decoded = getPayload(req)
+  const jsonData = req.body
+  const userId = jsonData._id
   const { isValid, validFields } = isRequestBodyForUpdateRecordValid(
     jsonData,
-    UserSchema.schema,
-  );
+    UserSchema.schema
+  )
 
   if (!isValid) {
     return res
       .status(status.badRequest)
-      .send(rs(status.badRequest, message.noUpdateFields));
+      .send(rs(status.badRequest, message.noUpdateFields))
   }
 
-  const validObject = getObjectWithValidFields(jsonData, validFields);
+  const validObject = getObjectWithValidFields(jsonData, validFields)
 
   userdb
     .updateUser(userId, validObject, decoded.email)
     .then((response) => {
-      res.status(status.success).send(rs(status.success, message.userUpdate));
+      res.status(status.success).send(rs(status.success, message.userUpdate))
     })
     .catch((error) => {
       res
         .status(status.failure)
-        .send(rs(status.failure, message.internalServerError, error));
-    });
-};
+        .send(rs(status.failure, message.internalServerError, error))
+    })
+}
 
 /**
  * @swagger
@@ -486,54 +486,54 @@ exports.updateUser = async (req, res) => {
 
 // Login user
 exports.login = async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password } = req.body
   if (!email && !password) {
     return res
       .status(status.success)
-      .send(rs(status.unauthorized, message.unauthorized));
+      .send(rs(status.unauthorized, message.unauthorized))
   }
   try {
-    const users = await userdb.getUsers({ email }, { lean: true });
+    const users = await userdb.getUsers({ email }, { lean: true })
     if (users.length > 0) {
-      const user = users[0];
+      const user = users[0]
       if (user.password === password) {
         const accessToken = jwt.sign(
           getCleanObject(user, SelectMeta.default, SelectMeta.users),
           jwt_key,
           {
-            expiresIn: '24hr',
-          },
-        );
+            expiresIn: '24hr'
+          }
+        )
 
         const refreshToken = jwt.sign(
           getCleanObject(user, SelectMeta.default, SelectMeta.users),
           jwt_key,
           {
-            expiresIn: '7d',
-          },
-        );
+            expiresIn: '7d'
+          }
+        )
 
         res.status(status.success).send(
           rs(status.success, 'User authenticated', {
             accessToken,
-            refreshToken,
-          }),
-        );
+            refreshToken
+          })
+        )
       } else {
         res
           .status(status.unauthorized)
-          .send(rs(status.unauthorized, 'User not authenticated'));
+          .send(rs(status.unauthorized, 'User not authenticated'))
       }
     } else {
-      res.status(status.success).send(rs(status.noRecords, message.noRecords));
+      res.status(status.success).send(rs(status.noRecords, message.noRecords))
     }
   } catch (error) {
-    console.log(error);
+    console.log(error)
     res
       .status(status.failure)
-      .send(rs(status.failure, message.addUserError, error));
+      .send(rs(status.failure, message.addUserError, error))
   }
-};
+}
 
 /**
  * @swagger
@@ -572,36 +572,36 @@ exports.login = async (req, res) => {
 
 // Login user
 exports.refreshToken = async (req, res) => {
-  const tokenString = req.get('Authorization');
+  const tokenString = req.get('Authorization')
   try {
-    const parts = tokenString.split(' ');
-    const token = parts[1];
+    const parts = tokenString.split(' ')
+    const token = parts[1]
     if (!token) {
       return res
         .status(status.success)
-        .send(rs(status.unauthorized, message.unauthorized));
+        .send(rs(status.unauthorized, message.unauthorized))
     }
 
-    const user = jwt.verify(token, jwt_key);
-    delete user.iat;
-    delete user.exp;
+    const user = jwt.verify(token, jwt_key)
+    delete user.iat
+    delete user.exp
     const accessToken = jwt.sign(user, jwt_key, {
-      expiresIn: '24hr',
-    });
+      expiresIn: '24hr'
+    })
 
     const refreshToken = jwt.sign(user, jwt_key, {
-      expiresIn: '7d',
-    });
+      expiresIn: '7d'
+    })
 
     res.status(status.success).send(
       rs(status.success, 'User authenticated', {
         accessToken,
-        refreshToken,
-      }),
-    );
+        refreshToken
+      })
+    )
   } catch (error) {
     res
       .status(status.failure)
-      .send(rs(status.failure, message.internalServerError, error));
+      .send(rs(status.failure, message.internalServerError, error))
   }
-};
+}

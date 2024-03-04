@@ -1,20 +1,20 @@
-const { RecordStatus } = require('../constants');
-const { UserSchema } = require('../models/user.model');
+const { RecordStatus } = require('../constants')
+const { UserSchema } = require('../models/user.model')
 
 // Add user
 exports.addUser = (userData, actionBy) => {
   return new Promise((resolve, reject) => {
-    const user = new UserSchema({ ...userData, createdBy: actionBy });
+    const user = new UserSchema({ ...userData, createdBy: actionBy })
     user
       .save()
       .then((response) => {
-        resolve(response);
+        resolve(response)
       })
       .catch((error) => {
-        reject(error);
-      });
-  });
-};
+        reject(error)
+      })
+  })
+}
 
 // get all users
 /**
@@ -29,13 +29,13 @@ exports.getUsers = (filters, options) => {
       .select(options?.select)
       .lean(options ? options.lean ?? false : false)
       .then((response) => {
-        resolve(response);
+        resolve(response)
       })
       .catch((error) => {
-        reject(error);
-      });
-  });
-};
+        reject(error)
+      })
+  })
+}
 
 // delete user
 exports.deleteUser = (userId) => {
@@ -43,13 +43,13 @@ exports.deleteUser = (userId) => {
     UserSchema.findByIdAndUpdate(userId, { recStatus: RecordStatus.inactive })
 
       .then((user) => {
-        resolve(user);
+        resolve(user)
       })
       .catch((error) => {
-        reject(error);
-      });
-  });
-};
+        reject(error)
+      })
+  })
+}
 
 // update user
 exports.updateUser = (userId, userData, actionBy) => {
@@ -57,13 +57,13 @@ exports.updateUser = (userId, userData, actionBy) => {
     const params = {
       ...userData,
       updatedBy: actionBy,
-      updatedAt: new Date(),
-    };
+      updatedAt: new Date()
+    }
     UserSchema.findOneAndUpdate({ _id: userId }, params)
       .then(() => resolve())
       .catch((error) => {
-        console.log(error);
-        reject(error);
-      });
-  });
-};
+        console.log(error)
+        reject(error)
+      })
+  })
+}

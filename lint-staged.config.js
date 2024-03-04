@@ -12,7 +12,6 @@ module.exports = {
     const concurrentCommands = [`npx eslint ${glob}`];
     return [
       `npx concurrently ${concurrentCommands.map((c) => `"${c}"`).join(' ')}`,
-      `npx prettier --write ${glob}`,
     ];
   },
 };
