@@ -37,8 +37,13 @@ require('./routers')(app, express)
 // MARK:- Error if any one will hit url not found
 app.use((req, res) => {
   res.status(404).json({
-    Error: 'url not found'
+    error: 'url not found'
   })
+})
+
+app.use((err, req, res, next) => {
+  console.log('error: ', err)
+  return res.status(500).send({ error: 'internal server error' })
 })
 
 app.listen(port, () => {

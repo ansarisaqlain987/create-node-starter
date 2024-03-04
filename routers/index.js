@@ -4,23 +4,55 @@ const { message } = require('../constants/messages.constants')
 const { getRoutesArray } = require('../helpers/routes.helper')
 const path = require('path')
 
+const useHandler = (handler) => {
+  return async (request, response, next) => {
+    const ctx = {
+      request,
+      response,
+      body: request.body,
+      params: request.params,
+      query: request.query,
+      headers: request.headers,
+      get: request.get,
+      setStatus: response.status,
+      next: () => 'next'
+    }
+    const data = await handler(ctx)
+    if (typeof data === 'string' && data === 'next') {
+      next()
+    } else {
+      return response.send(data)
+    }
+  }
+}
+
 module.exports = (app, express) => {
   const router = express.Router()
-
   const dirPath = path.resolve(routerPath)
   const routes = getRoutesArray(dirPath)
 
   routes.forEach((route) => {
-    if (route.method === RequestMethod.put) {
-      router.put(route.endpoint, ...route.handlers)
-    } else if (route.method === RequestMethod.get) {
-      router.get(route.endpoint, ...route.handlers)
-    } else if (route.method === RequestMethod.delete) {
-      router.delete(route.endpoint, ...route.handlers)
-    } else if (route.method === RequestMethod.post) {
-      router.post(route.endpoint, ...route.handlers)
-    } else {
-      console.error(message.requestMethodError)
+    const handlers = route.handlers.map(h => useHandler(h))
+    switch (route.method) {
+      case RequestMethod.put: {
+        router.put(route.endpoint, ...handlers)
+        break
+      }
+      case RequestMethod.get: {
+        router.get(route.endpoint, ...handlers)
+        break
+      }
+      case RequestMethod.delete: {
+        router.delete(route.endpoint, ...handlers)
+        break
+      }
+      case RequestMethod.post: {
+        router.post(route.endpoint, ...handlers)
+        break
+      }
+      default: {
+        console.error(message.requestMethodError)
+      }
     }
   })
 

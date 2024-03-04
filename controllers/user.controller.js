@@ -1,5 +1,6 @@
 const userdb = require('../database/user.db')
-const { status } = require('../constants')
+// eslint-disable-next-line no-unused-vars
+const { status, Context } = require('../constants')
 const { message } = require('../constants/messages.constants')
 const { responseStructure: rs } = require('../helpers/response.helper')
 const { updateFilters, FiltersMeta } = require('../helpers/filter.helpers')
@@ -144,31 +145,35 @@ const { UserSchema } = require('../models/user.model')
  *
  */
 
-// Add user
-exports.addUser = async (req, res) => {
-  const jsonData = req.body
+/**
+ * @function addUser
+ * @description adds user into the database
+ * @param {typeof Context} ctx
+ * @returns
+ */
+exports.addUser = async (ctx) => {
+  const jsonData = ctx.body
 
   const { isValid, missingFields, validFields } =
     isRequestBodyForAddRecordValid(jsonData, UserSchema.schema)
   if (!isValid) {
-    return res
-      .status(status.badRequest)
-      .send(rs(status.badRequest, message.missingFields, { missingFields }))
+    ctx.setStatus(status.badRequest)
+    return rs(status.badRequest, message.missingFields, { missingFields })
   }
 
   const validObject = getObjectWithValidFields(jsonData, validFields)
 
-  userdb
-    .addUser(validObject, jsonData.email)
+  return userdb
+    .addUser({ ...validObject, password: '123456' }, jsonData.email)
     .then((response) => {
-      res
-        .status(status.success)
-        .send(rs(status.success, message.addUserSuccess))
+      console.log(response)
+      ctx.setStatus(status.success)
+      return rs(status.success, message.addUserSuccess)
     })
     .catch((error) => {
-      res
-        .status(status.failure)
-        .send(rs(status.failure, message.addUserError, error))
+      console.log(error)
+      ctx.setStatus(status.failure)
+      return rs(status.failure, message.addUserError, error)
     })
 }
 
@@ -213,22 +218,25 @@ exports.addUser = async (req, res) => {
  *               message: All users data fetched successfully
  */
 
-// get all users
-exports.getUsers = (req, res) => {
-  const queryParams = req.query
+/**
+ * @function getUsers
+ * @description fetch users list
+ * @param {typeof Context} ctx
+ * @returns
+ */
+exports.getUsers = (ctx) => {
+  const queryParams = ctx.query
   updateFilters(queryParams, FiltersMeta.users)
   const selectString = getSelectString(SelectMeta.default, SelectMeta.users)
-  userdb
+  return userdb
     .getUsers(queryParams, { select: selectString })
     .then((users) => {
-      res
-        .status(status.success)
-        .send(rs(status.success, message.getAllStudents, users))
+      ctx.setStatus(status.success)
+      return rs(status.success, message.getAllStudents, users)
     })
     .catch((error) => {
-      res
-        .status(status.failure)
-        .send(rs(status.failure, message.internalServerError, error))
+      ctx.setStatus(status.failure)
+      return rs(status.failure, message.internalServerError, error)
     })
 }
 
@@ -271,35 +279,33 @@ exports.getUsers = (req, res) => {
  *               message: Single user data fetched successfully
  */
 
-// Get single user data
-exports.singleUser = (req, res) => {
-  const userId = req.params.id
+/**
+ * @function singleUser
+ * @description fetch a user
+ * @param {typeof Context} ctx
+ * @returns
+ */
+exports.singleUser = (ctx) => {
+  const userId = ctx.params.id
 
   if (!userId) {
-    return res
-      .status(status.badRequest)
-      .send(rs(status.badRequest, message.noUniqueId))
+    ctx.setStatus(status.badRequest)
+    return rs(status.badRequest, message.noUniqueId)
   }
 
   const selectString = getSelectString(SelectMeta.default, SelectMeta.users)
-  userdb
+  return userdb
     .getUsers({ _id: userId }, { select: selectString })
     .then((users) => {
       if (users.length > 0) {
-        console.log(users)
-        res
-          .status(status.success)
-          .send(rs(status.success, message.singleStudent, users[0]))
+        return rs(status.success, message.singleStudent, users[0])
       } else {
-        res
-          .status(status.success)
-          .send(rs(status.noRecords, message.noRecords))
+        return rs(status.noRecords, message.noRecords)
       }
     })
     .catch((error) => {
-      res
-        .status(status.failure)
-        .send(rs(status.failure, message.internalServerError, error))
+      ctx.setStatus(status.failure)
+      return rs(status.failure, message.internalServerError, error)
     })
 }
 
@@ -342,25 +348,26 @@ exports.singleUser = (req, res) => {
  *               message: User delete successfully
  */
 
-// delete user
-exports.deleteUser = (req, res) => {
-  const userId = req.params.id
+/**
+ * @function deleteUser
+ * @description delete user
+ * @param {typeof Context} ctx
+ * @returns
+ */
+exports.deleteUser = (ctx) => {
+  const userId = ctx.params.id
   if (!userId) {
-    return res
-      .status(status.badRequest)
-      .send(rs(status.badRequest, message.noUniqueId))
+    ctx.setStatus(status.badRequest)
+    return rs(status.badRequest, message.noUniqueId)
   }
-  userdb
+  return userdb
     .deleteUser(userId)
     .then((response) => {
-      res
-        .status(status.success)
-        .send(rs(status.success, message.deleteUser, response))
+      return rs(status.success, message.deleteUser, response)
     })
     .catch((error) => {
-      res
-        .status(status.failure)
-        .send(rs(status.failure, message.internalServerError, error))
+      ctx.setStatus(status.failure)
+      return rs(status.failure, message.internalServerError, error)
     })
 }
 
@@ -411,10 +418,15 @@ exports.deleteUser = (req, res) => {
  *
  */
 
-// update user
-exports.updateUser = async (req, res) => {
-  const decoded = getPayload(req)
-  const jsonData = req.body
+/**
+ * @function updateUser
+ * @description update user details
+ * @param {typeof Context} ctx
+ * @returns
+ */
+exports.updateUser = async (ctx) => {
+  const decoded = getPayload(ctx.request)
+  const jsonData = ctx.body
   const userId = jsonData._id
   const { isValid, validFields } = isRequestBodyForUpdateRecordValid(
     jsonData,
@@ -422,22 +434,21 @@ exports.updateUser = async (req, res) => {
   )
 
   if (!isValid) {
-    return res
-      .status(status.badRequest)
-      .send(rs(status.badRequest, message.noUpdateFields))
+    ctx.setStatus(status.badRequest)
+    return rs(status.badRequest, message.noUpdateFields)
   }
 
   const validObject = getObjectWithValidFields(jsonData, validFields)
 
-  userdb
+  return userdb
     .updateUser(userId, validObject, decoded.email)
     .then((response) => {
-      res.status(status.success).send(rs(status.success, message.userUpdate))
+      ctx.setStatus(status.success)
+      return rs(status.success, message.userUpdate)
     })
     .catch((error) => {
-      res
-        .status(status.failure)
-        .send(rs(status.failure, message.internalServerError, error))
+      ctx.setStatus(status.failure)
+      return rs(status.failure, message.internalServerError, error)
     })
 }
 
@@ -484,13 +495,17 @@ exports.updateUser = async (req, res) => {
  *
  */
 
-// Login user
-exports.login = async (req, res) => {
-  const { email, password } = req.body
+/**
+ * @function login
+ * @description login
+ * @param {typeof Context} ctx
+ * @returns
+ */
+exports.login = async (ctx) => {
+  const { email, password } = ctx.body
   if (!email && !password) {
-    return res
-      .status(status.success)
-      .send(rs(status.unauthorized, message.unauthorized))
+    ctx.setStatus(status.success)
+    return rs(status.unauthorized, message.unauthorized)
   }
   try {
     const users = await userdb.getUsers({ email }, { lean: true })
@@ -513,25 +528,21 @@ exports.login = async (req, res) => {
           }
         )
 
-        res.status(status.success).send(
-          rs(status.success, 'User authenticated', {
-            accessToken,
-            refreshToken
-          })
-        )
+        return rs(status.success, 'User authenticated', {
+          accessToken,
+          refreshToken
+        })
       } else {
-        res
-          .status(status.unauthorized)
-          .send(rs(status.unauthorized, 'User not authenticated'))
+        ctx.setStatus(status.unauthorized)
+        return rs(status.unauthorized, 'User not authenticated')
       }
     } else {
-      res.status(status.success).send(rs(status.noRecords, message.noRecords))
+      return rs(status.noRecords, message.noRecords)
     }
   } catch (error) {
     console.log(error)
-    res
-      .status(status.failure)
-      .send(rs(status.failure, message.addUserError, error))
+    ctx.setStatus(status.failure)
+    return rs(status.failure, message.addUserError, error)
   }
 }
 
@@ -570,16 +581,20 @@ exports.login = async (req, res) => {
  *
  */
 
-// Login user
-exports.refreshToken = async (req, res) => {
-  const tokenString = req.get('Authorization')
+/**
+ * @function refreshToken
+ * @description refreshToken
+ * @param {typeof Context} ctx
+ * @returns
+ */
+exports.refreshToken = async (ctx) => {
+  const tokenString = ctx.get('Authorization')
   try {
     const parts = tokenString.split(' ')
     const token = parts[1]
     if (!token) {
-      return res
-        .status(status.success)
-        .send(rs(status.unauthorized, message.unauthorized))
+      ctx.setStatus(status.success)
+      return rs(status.unauthorized, message.unauthorized)
     }
 
     const user = jwt.verify(token, jwt_key)
@@ -593,15 +608,13 @@ exports.refreshToken = async (req, res) => {
       expiresIn: '7d'
     })
 
-    res.status(status.success).send(
-      rs(status.success, 'User authenticated', {
-        accessToken,
-        refreshToken
-      })
-    )
+    ctx.setStatus(status.success)
+    return rs(status.success, 'User authenticated', {
+      accessToken,
+      refreshToken
+    })
   } catch (error) {
-    res
-      .status(status.failure)
-      .send(rs(status.failure, message.internalServerError, error))
+    ctx.setStatus(status.failure)
+    return rs(status.failure, message.internalServerError, error)
   }
 }
